@@ -33,14 +33,33 @@ Q5.modules.input = ($) => {
 
 	let keysHeld = {};
 
+	$.calculateCanvasMetrics = () => {
+		const rect = $.canvas.getBoundingClientRect();
+		const aspectRatioCanvas = $.width / $.height;
+		const aspectRatioRect = rect.width / rect.height;
+
+		const displayedWidth = aspectRatioCanvas > aspectRatioRect ? rect.width : rect.height * aspectRatioCanvas;
+		const displayedHeight = aspectRatioCanvas > aspectRatioRect ? rect.width / aspectRatioCanvas : rect.height;
+
+		$.canvasMetrics = {
+			offsetX: rect.left - ((rect.width - displayedWidth) / 2),
+			offsetY: rect.top - ((rect.height - displayedHeight) / 2),
+			scaleX: $.width / displayedWidth,
+			scaleY: $.height / displayedHeight,
+			width: window.innerWidth
+		};
+	};
+
 	$._updateMouse = (e) => {
 		if (e.changedTouches) return;
-		let rect = $.canvas.getBoundingClientRect();
-		let sx = $.canvas.scrollWidth / $.width || 1;
-		let sy = $.canvas.scrollHeight / $.height || 1;
-		$.mouseX = (e.clientX - rect.left) / sx;
-		$.mouseY = (e.clientY - rect.top) / sy;
+		if (!$.canvasMetrics || window.innerWidth !== $.canvasMetrics.width) {
+			$.calculateCanvasMetrics();
+		}
+		const { offsetX, offsetY, scaleX, scaleY } = $.canvasMetrics;
+		$.mouseX = (e.clientX - offsetX) * scaleX;
+		$.mouseY = (e.clientY - offsetY) * scaleY;
 	};
+
 	$._onmousedown = (e) => {
 		$._updateMouse(e);
 		$.mouseIsPressed = true;
